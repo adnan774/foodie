@@ -19,6 +19,22 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> loginUser(@RequestParam String username, @RequestParam String password) {
+        boolean isAuthenticated = userService.loginUser(username, password);
+        Map<String, Object> response = new HashMap<>();
+        
+        if (isAuthenticated) {
+            response.put(AppConstants.ResponseKeys.STATUS, Status.SUCCESS.name());
+            response.put(AppConstants.ResponseKeys.MESSAGE, "Login successful");
+        } else {
+            response.put(AppConstants.ResponseKeys.STATUS, Status.FAILURE.name());
+            response.put(AppConstants.ResponseKeys.MESSAGE, "Invalid username or password");
+        }
+        
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllUsers() {
