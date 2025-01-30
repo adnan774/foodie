@@ -37,14 +37,19 @@ pipeline {
         }
         stage('Start MySQL Container') {
             steps {
-                echo "Starting MySQL Container"
+                echo "Checking MySQL Container"
                 sh '''
-                if [ ! "$(docker ps -q -f name=${DB_CONTAINER})" ]; then
-                    docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} \
-                        -e MYSQL_ROOT_PASSWORD=OrangeGrape123! \
-                        -e MYSQL_DATABASE=foodie_db \
-                        -p 3307:3306 ${DB_IMAGE}
+                if [ "$(docker ps -aq -f name=${DB_CONTAINER})" ]; then
+                    echo "Stopping and removing existing MySQL container..."
+                    docker stop ${DB_CONTAINER} || true
+                    docker rm ${DB_CONTAINER} || true
                 fi
+
+                echo "Starting a fresh MySQL container..."
+                docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} \
+                    -e MYSQL_ROOT_PASSWORD=OrangeGrape123! \
+                    -e MYSQL_DATABASE=foodie_db \
+                    -p 3307:3306 ${DB_IMAGE}
                 '''
             }
         }
@@ -56,23 +61,33 @@ pipeline {
         }
         stage('Remove Existing Container') {
             steps {
-                echo "Stopping and removing existing container"
+                echo "Stopping and removing existing backend container"
                 sh '''
-                if [ "$(docker ps -q -f name=foodie-container)" ]; then
-                    docker stop foodie-container
-                    docker rm foodie-container
+                if [ "$(docker ps -aq -f name=foodie-container)" ]; then
+                    docker stop foodie-container || true
+                    docker rm foodie-container || true
                 fi
                 '''
             }
         }
-        stage('Run Docker Container') {
-            steps {
-                echo "Running Docker container"
-                sh '''
-                docker run -d --name foodie-container --network ${NETWORK_NAME} \
-                    -p 8100:8080 ${IMAGE_NAME}
-                '''
-            }
-        }
+       stage('Run Docker Container') {
+    	   steps {
+        	   echo "Running backend container"
+               sh '''
+        		docker run -d --name foodie-container --network ${NETWORK_NAME} \
+            	-p 8100:8080 ${IMAGE_NAME} || echo "Container failed to start!"
+        
+        		sleep 5
+
+        		if [ "$(docker ps -aq -f name=foodie-container)" ]; then
+            		echo "Backend container is running."
+        		else
+            		echo "Backend container failed! Printing logs..."
+            		docker logs foodie-container || echo "No logs found."
+            	exit 1
+        		fi
+        		'''
+    		}
+		}
     }
 }
