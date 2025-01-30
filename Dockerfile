@@ -1,14 +1,14 @@
-# Use Amazon Corretto as the base image
+# Use Amazon Corretto JDK 17 as base image
 FROM amazoncorretto:17
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy only the JAR file (avoid sending unnecessary files)
+# Copy the JAR file from the target folder
 COPY target/foodie-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the application port
 EXPOSE 8080
 
-# Set the command to run the application
-CMD ["java", "-jar", "app.jar"]
+# Add a delay to ensure MySQL is up before starting the backend
+CMD ["sh", "-c", "sleep 10 && java -jar app.jar"]
