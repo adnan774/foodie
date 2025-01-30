@@ -19,8 +19,11 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                echo "Building the project with Maven..."
-                sh './mvnw clean package -DskipTests'
+                echo "Making mvnw executable..."
+        		sh 'chmod +x mvnw'
+        
+        		echo "Building the project with Maven..."
+        		sh './mvnw clean package -DskipTests'
             }
         }
 
