@@ -5,7 +5,7 @@ FROM amazoncorretto:17
 ARG JAR_FILE
 
 # Copy the JAR file into the Docker image
-COPY ${JAR_FILE} app.jar
+COPY target/foodie-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the application port
 EXPOSE 8080
