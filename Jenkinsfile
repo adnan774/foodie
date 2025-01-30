@@ -61,11 +61,12 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            steps {
-                echo "Building Docker image for backend..."
-                sh 'docker build -t ${IMAGE_NAME} .'
-            }
-        }
+    steps {
+        echo "Building Docker image for backend..."
+        sh 'docker build --memory=512m --memory-swap=1024m -t ${IMAGE_NAME} .'
+    }
+}
+
 
         stage('Run Backend Application') {
             steps {
