@@ -90,8 +90,11 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline executed successfully!"
-            echo "API should be available at: http://$(curl -s ifconfig.me):8080"
+            script {
+                def ec2IP = sh(script: "curl -s ifconfig.me", returnStdout: true).trim()
+                echo "Pipeline executed successfully!"
+                echo "API is available at: http://${ec2IP}:8080"
+            }
         }
         failure {
             echo "Pipeline failed. Check logs for errors."
