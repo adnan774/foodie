@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.foodie.dto.OrderRequest;
 import com.example.foodie.entity.Order;
 import com.example.foodie.service.OrderService;
 import com.example.foodie.utility.AppConstants;
@@ -57,13 +58,19 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createOrder(@RequestBody Order order) {
-        Order createdOrder = orderService.createOrder(order);
+    public ResponseEntity<Map<String, Object>> createOrder(@RequestBody OrderRequest request) {
         Map<String, Object> response = new HashMap<>();
-        response.put(AppConstants.ResponseKeys.STATUS, Status.SUCCESS.name());
-        response.put(AppConstants.ResponseKeys.MESSAGE, AppConstants.SuccessMessages.OPERATION_SUCCESS);
-        response.put("order", createdOrder);
-        return ResponseEntity.ok(response);
+        try {
+            Order createdOrder = orderService.createOrder(request);
+            response.put("status", "SUCCESS");
+            response.put("message", "Order placed successfully");
+            response.put("order", createdOrder);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "FAILURE");
+            response.put("message", "Error placing order: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @DeleteMapping("/{id}")

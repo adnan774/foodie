@@ -50,11 +50,12 @@ public class OrderItemController {
     public ResponseEntity<Map<String, Object>> getOrderItemsByOrder(@PathVariable Long orderId) {
         List<OrderItem> orderItems = orderItemService.getOrderItemsByOrder(orderId);
         Map<String, Object> response = new HashMap<>();
-        response.put(AppConstants.ResponseKeys.STATUS, Status.SUCCESS.name());
-        response.put(AppConstants.ResponseKeys.MESSAGE, AppConstants.SuccessMessages.OPERATION_SUCCESS);
+        response.put("status", "SUCCESS");
+        response.put("message", "Operation completed successfully");
         response.put("orderItems", orderItems);
         return ResponseEntity.ok(response);
     }
+
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> createOrderItem(@RequestBody OrderItem orderItem) {

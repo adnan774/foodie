@@ -2,11 +2,13 @@ package com.example.foodie.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "orders")
 public class Order {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -14,6 +16,10 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference 
+    private List<OrderItem> orderItems;
 
     @Column(name = "order_date", updatable = false)
     private LocalDateTime orderDate;
@@ -28,10 +34,11 @@ public class Order {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Order(Long id, User user, LocalDateTime orderDate) {
+	public Order(Long id, User user, List<OrderItem> orderItems, LocalDateTime orderDate) {
 		super();
 		this.id = id;
 		this.user = user;
+		this.orderItems = orderItems;
 		this.orderDate = orderDate;
 	}
 
@@ -51,6 +58,14 @@ public class Order {
 		this.user = user;
 	}
 
+	public List<OrderItem> getOrderItems() {
+		return orderItems;
+	}
+
+	public void setOrderItems(List<OrderItem> orderItems) {
+		this.orderItems = orderItems;
+	}
+	
 	public LocalDateTime getOrderDate() {
 		return orderDate;
 	}
@@ -61,9 +76,12 @@ public class Order {
 
 	@Override
 	public String toString() {
-		return "Order [id=" + id + ", user=" + user + ", orderDate=" + orderDate + "]";
+		return "Order [id=" + id + ", user=" + user + ", orderItems=" + orderItems + ", orderDate=" + orderDate + "]";
 	}
-
     
 }
+
+
+    
+
 
