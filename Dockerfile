@@ -1,10 +1,10 @@
 # Use Amazon Corretto as the base image
 FROM amazoncorretto:17
 
-# Add a build argument for the JAR file name
-ARG JAR_FILE
+# Set working directory
+WORKDIR /app
 
-# Copy the JAR file into the Docker image
+# Copy only the JAR file (avoid sending unnecessary files)
 COPY target/foodie-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the application port

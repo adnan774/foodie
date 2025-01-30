@@ -49,45 +49,32 @@ pipeline {
                 docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} \
                     -e MYSQL_ROOT_PASSWORD=OrangeGrape123! \
                     -e MYSQL_DATABASE=foodie_db \
-                    -p 3307:3306 ${DB_IMAGE}
+                    -p 3306:3306 \
+                    --health-cmd="mysqladmin ping --silent" \
+                    --health-interval=10s --health-timeout=5s --health-retries=3 \
+                    ${DB_IMAGE}
                 '''
             }
         }
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image"
-                sh 'docker build -t ${IMAGE_NAME} .'
+                sh 'docker build -t ${IMAGE_NAME} --no-cache .'
             }
         }
-        stage('Remove Existing Container') {
+        stage('Run Backend') {
             steps {
-                echo "Stopping and removing existing backend container"
+                echo "Waiting for MySQL..."
                 sh '''
-                if [ "$(docker ps -aq -f name=foodie-container)" ]; then
-                    docker stop foodie-container || true
-                    docker rm foodie-container || true
-                fi
+                until docker exec ${DB_CONTAINER} mysqladmin ping --silent; do
+                    echo "MySQL is not ready yet. Retrying in 5 seconds..."
+                    sleep 5
+                done
+                
+                echo "Running backend container..."
+                docker run -d --name foodie-container --network ${NETWORK_NAME} -p 8100:8080 ${IMAGE_NAME}
                 '''
             }
         }
-       stage('Run Docker Container') {
-    	   steps {
-        	   echo "Running backend container"
-               sh '''
-        		docker run -d --name foodie-container --network ${NETWORK_NAME} \
-            	-p 8100:8080 ${IMAGE_NAME} || echo "Container failed to start!"
-        
-        		sleep 5
-
-        		if [ "$(docker ps -aq -f name=foodie-container)" ]; then
-            		echo "Backend container is running."
-        		else
-            		echo "Backend container failed! Printing logs..."
-            		docker logs foodie-container || echo "No logs found."
-            	exit 1
-        		fi
-        		'''
-    		}
-		}
     }
 }
