@@ -117,15 +117,16 @@ pipeline {
     }
 
     post {
-        success {
-            script {
-                def backendIP = sh(script: "hostname -I | awk '{print $1}'", returnStdout: true).trim()
-                echo "Pipeline executed successfully!"
-                echo "API is available at: http://${backendIP}:8100"
-            }
-        }
-        failure {
-            echo "Pipeline failed. Check logs for errors."
+    success {
+        script {
+            def backendIP = sh(script: "hostname -I | awk '{print \\$1}'", returnStdout: true).trim()
+            echo "Pipeline executed successfully!"
+            echo "API is available at: http://${backendIP}:8100"
         }
     }
+    failure {
+        echo "Pipeline failed. Check logs for errors."
+    }
+}
+
 }
