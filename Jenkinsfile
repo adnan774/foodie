@@ -100,20 +100,20 @@ pipeline {
         }
 
         stage('Verify Application is Running') {
-            steps {
-                echo "Checking if the application is running..."
-                sh '''
-                sleep 10
-                if curl -s http://localhost:8100/actuator/health | grep "UP"; then
-                    echo "Application is running successfully!"
-                else
-                    echo "Application failed to start. Printing logs..."
-                    docker logs ${APP_CONTAINER}
-                    exit 1
-                fi
-                '''
-            }
-        }
+    steps {
+        echo "Checking if the application is running..."
+        sh '''
+        sleep 10
+        if curl -s http://localhost:8100/actuator/health | grep "UP"; then
+            echo "Application is running successfully!"
+        else
+            echo "Application failed to start. Printing logs..."
+            docker logs ${APP_CONTAINER}
+            exit 1
+        fi
+        '''
+    }
+}
     }
 
     post {
