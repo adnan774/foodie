@@ -20,10 +20,10 @@ pipeline {
         stage('Build with Maven') {
             steps {
                 echo "Making mvnw executable..."
-        		sh 'chmod +x mvnw'
-        
-        		echo "Building the project with Maven..."
-        		sh './mvnw clean package -DskipTests'
+                sh 'chmod +x mvnw'
+
+                echo "Building the project with Maven..."
+                sh './mvnw clean package -DskipTests'
             }
         }
 
@@ -61,12 +61,11 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-    steps {
-        echo "Building Docker image for backend..."
-        sh 'docker build --memory=512m --memory-swap=1024m -t ${IMAGE_NAME} .'
-    }
-}
-
+            steps {
+                echo "Building Docker image for backend..."
+                sh 'docker build -t ${IMAGE_NAME} .'
+            }
+        }
 
         stage('Run Backend Application') {
             steps {
@@ -77,9 +76,25 @@ pipeline {
                     sleep 5
                 done
 
+                echo "Stopping and removing existing backend container..."
+                if [ "$(docker ps -aq -f name=${APP_CONTAINER})" ]; then
+                    docker stop ${APP_CONTAINER} || true
+                    docker rm ${APP_CONTAINER} || true
+                fi
+
                 echo "Running backend application..."
                 docker run -d --name ${APP_CONTAINER} --network ${NETWORK_NAME} \
-                    -p 8080:8080 ${IMAGE_NAME}
+                    -p 8100:8080 ${IMAGE_NAME}
+
+                sleep 5
+
+                if [ "$(docker ps -aq -f name=${APP_CONTAINER})" ]; then
+                    echo "Backend container is running."
+                else
+                    echo "Backend container failed! Printing logs..."
+                    docker logs ${APP_CONTAINER} || echo "No logs found."
+                    exit 1
+                fi
                 '''
             }
         }
@@ -87,7 +102,16 @@ pipeline {
         stage('Verify Application is Running') {
             steps {
                 echo "Checking if the application is running..."
-                sh 'docker ps'
+                sh '''
+                sleep 10
+                if curl -s http://localhost:8100/actuator/health | grep "UP"; then
+                    echo "Application is running successfully!"
+                else
+                    echo "Application failed to start. Printing logs..."
+                    docker logs ${APP_CONTAINER}
+                    exit 1
+                fi
+                '''
             }
         }
     }
@@ -95,9 +119,9 @@ pipeline {
     post {
         success {
             script {
-                def ec2IP = sh(script: "curl -s ifconfig.me", returnStdout: true).trim()
+                def backendIP = sh(script: "hostname -I | awk '{print $1}'", returnStdout: true).trim()
                 echo "Pipeline executed successfully!"
-                echo "API is available at: http://${ec2IP}:8080"
+                echo "API is available at: http://${backendIP}:8100"
             }
         }
         failure {
