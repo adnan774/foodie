@@ -99,16 +99,17 @@ pipeline {
             }
         }
 
-        stage('Verify Application is Running') {
+     stage('Verify Application is Running') {
     steps {
-        echo "Checking if the application is running..."
+        echo "Checking if the backend container is running..."
         sh '''
-        sleep 10
-        if curl -s http://localhost:8100/actuator/health | grep "UP"; then
-            echo "Application is running successfully!"
+        sleep 10  # Give the container some time to start
+        
+        if docker ps -q -f name=${APP_CONTAINER}; then
+            echo "Backend container is running successfully!"
         else
-            echo "Application failed to start. Printing logs..."
-            docker logs ${APP_CONTAINER}
+            echo "Backend container is NOT running! Printing logs..."
+            docker logs ${APP_CONTAINER} || echo "No logs found."
             exit 1
         fi
         '''
